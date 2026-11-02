@@ -355,3 +355,18 @@
   not depend on `agent-desktop-policy`, so the C library is never gated. Every
   trust-boundary doc (README, docs/policies.md, the guide, the FFI skill and page)
   must say so, or an owner assumes a library-loading program is bound.
+- Statics are never dropped, so anything that must run on close (the policy
+  store checkpoint) needs an explicit release before a one-shot process exits;
+  `main()` calls `command_policy::dogwood::release_stores()`. The macOS host
+  calls `crate::execute` per request, so the release belongs in `main()`, not
+  in `execute`.
+- OrbStack's mount can hide a macOS-side edit from cargo's mtime check: a
+  "Finished in 0.06s" after an edit means a stale binary. `touch` the file
+  inside the VM before an invert-verify run there.
+- When the SSH agent cannot sign (`communication with agent failed`), push
+  once over HTTPS with `git -c credential.helper= -c
+  'credential.helper=!gh auth git-credential' push https://github.com/<fork>.git
+  <branch>`, which changes no config.
+- The live `window_at_point` tests meet WindowServer windows (another user);
+  the hit test refuses those by design, and `kill(pid, 0)` returning `EPERM`
+  is the independent oracle for "another user's process".
