@@ -118,7 +118,9 @@ fn run() -> ExitCode {
     };
 
     let cmd_name = cmd.name();
-    finish(cmd_name, execute(cli, cmd))
+    let exit_code = finish(cmd_name, execute(cli, cmd));
+    command_policy::dogwood::release_stores();
+    exit_code
 }
 
 fn execute(cli: Cli, cmd: Commands) -> Result<serde_json::Value, AppError> {
@@ -172,7 +174,12 @@ fn execute_with_deadline(
                 .or_else(|| std::env::var("AGENT_DESKTOP_AGENT_ID").ok());
             let mut context = context
                 .with_agent_id(agent_id)
-                .map_err(pre_dispatch_error)?;
+                .map_err(pre_dispatch_error)?
+                .with_policy_paths(agent_desktop_core::PolicyPaths {
+                    files: cli.policy.policy.clone(),
+                    dirs: cli.policy.policy_dir.clone(),
+                    env_dir: cli.policy.env_dir().map_err(pre_dispatch_error)?,
+                });
             if let Some(deadline) = deadline {
                 context = context.with_inherited_deadline(deadline);
             }
