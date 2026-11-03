@@ -370,3 +370,11 @@
 - The live `window_at_point` tests meet WindowServer windows (another user);
   the hit test refuses those by design, and `kill(pid, 0)` returning `EPERM`
   is the independent oracle for "another user's process".
+- Upstream removed the macOS command host (#414), so every command is its own
+  process on every OS. The policy layer no longer carries
+  `AGENT_DESKTOP_POLICY_DIR` through a host request (`PolicyArgs::env_dir()`
+  reads it directly), and the one-shot checkpoint test now runs on macOS too.
+- Auto-fix merge conflicts: `git fetch upstream main` then
+  `git merge --no-commit --no-ff FETCH_HEAD`; never rebase a PR branch once
+  it is open. New `RefEntry` fields upstream break the policy test fixtures
+  in `src/dispatch/policy_gate_desk.rs` at compile time, not at merge time.
